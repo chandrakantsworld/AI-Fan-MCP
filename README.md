@@ -24,7 +24,7 @@ A Node.js application that provides smart fan control capabilities through the M
 1. Clone the repository:
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/chandrakantsworld/AI-Fan-MCP.git
 cd AI-Fan
 ```
 
@@ -114,81 +114,142 @@ Sets the fan speed to a specific level (1-6).
 
 Checks the health and connectivity status of the fan.
 
-## Development
+## MCP Setup and Configuration
 
-### Code Quality
+### What is Model Context Protocol (MCP)?
 
-Run linting:
+The Model Context Protocol (MCP) is a standard that enables AI assistants to interact with external tools and data sources. This project implements MCP to allow AI assistants to control your smart fan directly.
 
-```bash
-npm run lint
-```
+### MCP Server Configuration
 
-Fix linting issues:
+The MCP server runs on your local machine and communicates with AI assistants through a standardized interface. Here's how to set it up:
 
-```bash
-npm run lint:fix
-```
-
-Format code:
+#### 1. Basic MCP Server Setup
 
 ```bash
-npm run format
-```
+# Install dependencies
+npm install
 
-Type checking:
-
-```bash
-npm run type-check
-```
-
-### Testing
-
-Run tests:
-
-```bash
-npm test
-```
-
-Run tests in watch mode:
-
-```bash
-npm run test:watch
-```
-
-Run tests with coverage:
-
-```bash
-npm run test:coverage
-```
-
-### Building
-
-Build the project:
-
-```bash
+# Build the project
 npm run build
+
+# Start the MCP server
+npm start
 ```
 
-Clean build artifacts:
+#### 2. MCP Server Configuration
+
+The MCP server is configured in `src/index.ts` and provides the following tools:
+
+- **turn-on-fan**: Activates the smart fan
+- **turn-off-fan**: Deactivates the smart fan
+- **turn-on-led**: Enables the LED indicator
+- **turn-off-led**: Disables the LED indicator
+- **set-fan-speed**: Controls fan speed (1-6 levels)
+- **check-fan-health**: Monitors fan connectivity status
+
+#### 3. Environment Configuration
+
+Create a `.env` file with your fan settings:
+
+```env
+# Fan Configuration
+FAN_IP=192.168.1.13
+FAN_PORT=5600
+
+# MCP Server Settings
+MCP_SERVER_PORT=3000
+MCP_SERVER_HOST=localhost
+
+# Logging Configuration
+LOG_LEVEL=info
+NODE_ENV=production
+
+# UDP Settings
+UDP_TIMEOUT=5000
+UDP_RETRY_ATTEMPTS=3
+```
+
+#### 4. MCP Client Integration
+
+To use this MCP server with AI assistants, you'll need to configure the MCP client. Here are examples for popular AI assistants:
+
+##### Claude Desktop Configuration
+
+Create a `claude_desktop_config.json` file:
+
+```json
+{
+  "mcpServers": {
+    "ai-fan": {
+      "command": "node",
+      "args": ["/path/to/your/AI-Fan/dist/index.js"],
+      "env": {
+        "FAN_IP": "192.168.1.13",
+        "FAN_PORT": "5600"
+      }
+    }
+  }
+}
+```
+
+##### OpenAI GPTs Configuration
+
+For OpenAI GPTs, you'll need to use the MCP bridge pattern:
+
+```json
+{
+  "mcpServers": {
+    "ai-fan": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-ai-fan"],
+      "env": {
+        "FAN_IP": "192.168.1.13",
+        "FAN_PORT": "5600"
+      }
+    }
+  }
+}
+```
+
+#### 5. Testing MCP Integration
+
+Test your MCP server connection:
 
 ```bash
-npm run clean
+# Start the server
+npm start
+
+# In another terminal, test the connection
+curl -X POST http://localhost:3000/mcp/tools \
+  -H "Content-Type: application/json" \
+  -d '{"name": "check-fan-health"}'
 ```
 
-## Project Structure
+#### 6. MCP Server Security
 
-```
-src/
-├── config/          # Configuration management
-├── utils/           # Utility functions and helpers
-├── __tests__/       # Test files
-├── index.ts         # Main application entry point
-└── service.ts       # Fan control service layer
+**Important Security Considerations:**
 
-dist/                # Compiled JavaScript output
-logs/                # Application logs
-coverage/            # Test coverage reports
+- The MCP server runs locally and should not be exposed to the internet
+- Use environment variables for sensitive configuration
+- Implement proper authentication if deploying in shared environments
+- Regularly update dependencies for security patches
+
+#### 7. Troubleshooting MCP Issues
+
+**Common MCP Connection Problems:**
+
+1. **Server not starting**: Check port availability and environment variables
+2. **Tool not found**: Verify the tool name matches exactly
+3. **Permission denied**: Ensure proper file permissions for the executable
+4. **Network errors**: Verify fan IP and port configuration
+
+**Debug Mode:**
+
+Enable debug logging to troubleshoot MCP issues:
+
+```bash
+LOG_LEVEL=debug npm start
 ```
 
 ## Error Handling
@@ -244,20 +305,3 @@ The application provides health monitoring capabilities:
 ### Debug Mode
 
 Enable debug logging by setting `LOG_LEVEL=debug` in your environment configuration.
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Ensure all tests pass
-6. Submit a pull request
-
-## License
-
-This project is licensed under the ISC License.
-
-## Support
-
-For support and questions, please open an issue in the repository.
